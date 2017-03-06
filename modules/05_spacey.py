@@ -36,6 +36,67 @@ nlp.tagger(mr_doc) # pos tagger
 nlp.parser(mr_doc) # dependency parser
 nlp.entity(mr_doc) # entity recongizer
 
+# dependency parser visualization
+# https://demos.explosion.ai/displacy/
+
+# show sentences parsed into trees with verbs as base of trees
+# grab those verbs out
+# maybe groub out subject-relation-direct object triples
+
 # doc1.similarity(doc2)
 
 # list((w.text, w.pos_) for w in mr_doc)
+
+# Multi-threading with .pipe()
+# https://spacy.io/docs/usage/processing-text#multithreading
+texts = [r['text'] for r in reviews]
+for i, doc in enumerate(nlp.pipe(texts, batch_size=10000, n_threads=3)):
+    reviews[i]['doc'] = doc
+
+
+
+for r in reviews:
+    print(r['title'])
+    docs.append(nlp(r['text']))
+
+g_rated = [r for r in reviews if r['mpaa_rating']=='G']
+len(g_rated)
+g_titles = {r['title']:r for r in g_rated}
+for r in g_rated:
+    print(r['title'])
+    r['doc'] = nlp(r['text'])
+
+mermaid_doc = g_titles['The Little Mermaid (1989)']['doc']
+g_rated.sort(key=lambda r:r['doc'].similarity(mermaid_doc))
+g_rated[-1]['title'] # The Little Mermaid (same)
+g_rated[-2]['title'] # Aladdin
+g_rated[-3]['title'] # Beauty And The Beast
+g_rated[0]['title'] # Stormchasers
+g_rated[1]['title'] # Microcosmos
+g_rated[2]['title'] # Hubble 3D
+# or
+mermaid_like = [(mermaid_doc.similarity(r['doc']),r) for r in g_rated]
+for sim_score, r in mermaid_like:
+    print(sim_score, r['title'])
+
+s = list(mermaid_docs.sents)[3]
+s.root
+list(s.root.children)
+
+for sent in mermaid_doc.sents:
+    print(sent.root)
+
+# semantic similarity visualization
+# https://demos.explosion.ai/sense2vec/?word=natural%20language%20processing&sense=auto
+
+# could create matrix of similarities ... would take a long time
+# with matrix, could find most similar/disimilar pairs in a bunch
+# could collect disaster movies (23) to find these matches
+
+# pull out different types of named entities
+# aggregate named entities across reviews
+# look at aggregates of different types of named entities across corpus
+
+
+# NER visualization
+# https://demos.explosion.ai/displacy-ent/

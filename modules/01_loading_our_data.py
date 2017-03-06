@@ -17,8 +17,6 @@ for r in reviews:
 
 reviews.sort(key=lambda r:r['release_year']) # sort by release_year
 
-titles = {r['title']:r for r in reviews}
-
 def display(r):
     print("""
     Review: %s
@@ -40,19 +38,20 @@ def display(r):
 ####
 
 type(reviews) # list
-reviews
+reviews[:5]
+reviews[-5:]
 len(reviews) # 7734
 type(reviews[0]) # dict
 reviews[0] # oldest movie by release year
 reviews[-1] # newest movie by release year
 random.choice(reviews)
 r = random.choice(reviews)
-sorted(r) # review object fields
+sorted(r) # alphabetical list of review fields
 r # review object
 r['title']
 print(r['text'])
 display(r) # custom printed view
-display(random.choice(reviews))
+display(random.choice(reviews)) # repeat to view random reviews
 
 # read some excerpts
 # visit a couple links
@@ -66,14 +65,18 @@ def search(q, reviews):
             matches[title] = r
     return matches
 
-results = search('war', reviews)
-sorted(results) # alphabetical list of results titles
+love_movies = search('love', reviews)
+sorted(love_movies) # alphabetical list of titles
+war_movies = search('war', reviews)
+sorted(results)
 results['The Fog of War (2004)']
 
-type(titles) # dictionary of reviews by title
-titles
-len(titles) # yup, 7734 of them
+# let's organize our data into a dictionary for easier access
+titles = {r['title']:r for r in reviews} # dictionary of reviews by title
+type(titles)
 sorted(titles)
-# >>> titles['My Movi... [TAB] for autocompletion
+titles['Chinatown'] # >>> titles['My Movi... [TAB] for autocompletion
+titles['The Big Lebowski (1998)']
+len(titles) # yup, 7734 of them
 mr = titles['Minority Report (2002)'] # titles['Minor[TAB]...
 display(mr)
