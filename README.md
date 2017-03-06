@@ -10,7 +10,7 @@ Natural Language Processing with Python
   		http://www.nltk.org/book/ch01.html#getting-started-with-nltk
   		  1. pip install nltk
   		  2. nltk.download()
-        3. download the "book" package from the popup menu
+  		  3. download the "book" package from the popup menu
   	spaCy
   		https://spacy.io/docs/usage/
   		  1. pip install -U spacy
@@ -24,7 +24,7 @@ Natural Language Processing with Python
   		(or via Anaconda)
   	matplotlib
   		pip install matplotlib
-      (or via Anaconda)
+  		(or via Anaconda)
 
 ## Data:
 Roger Ebert corpus of reviews
