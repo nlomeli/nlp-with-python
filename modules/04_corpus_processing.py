@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import nltk
+from nltk.stem.porter import *
 from collections import Counter
 
 try:
@@ -24,48 +25,12 @@ titles = {r['title']:r for r in reviews} # dict of reviews by title
 
 ####
 
-
 # Corpus level analysis with set of reviews
-
-# import os
-# nltk.corpus.reader.plaintext import PlaintextCorpusReader
-# corpusdir = 'review_text/'
-# newcropus = PlaintextCorpusReader(corpusdir, '.*')
-
-
+# let's remember what we're working with:
 len(reviews) # 7734 star-rated reviews
 reviews.sort(key=lambda x:len(x['text']))
 reviews[0] # shortest
 reviews[-1] # longest
-# reviews.sort(key=lambda x:x['running_time'])
-# date_published
-# running_time
-# star_rating
-# mpaa_rating
-# genre
-
-# show plots and other statistics
-# concatenate by date_published
-# analyze concatenated corpus using NLTK techniques seen above (and more)
-# possibly run some processes against each individual review text
-#   e.g. compare review_wrapper._collocations across texts
-
-
-
-# collocations
-# or
-# noun chunks
-# or
-# tf-idf
-# or
-# tf-idf for noun chunks
-#for r in reviews:
-#    tokens = nltk.word_tokenize(r['text'])
-#    text_wrapper = nltk.Text(tokens)
-#    text_wrapper.collocations(50)
-#    collos = text_wrapper._collocations
-#    r['collocations'] = collos
-
 
 grammar = r"""
 NP: {<JJ>*<NNS?>+}
@@ -73,6 +38,7 @@ NP: {<JJ>*<NNS?>+}
 """
 chunk_parser = nltk.RegexpParser(grammar)
 
+# parse reviews and store results in review object
 def parse_review(r, parser):
     try:
         print(r['title'])
@@ -92,50 +58,29 @@ def parse_review(r, parser):
         print(error)
         print('')
 
-for r in reviews:
+# could use a subset of reviews:
+westerns = [r for r in reviews if r['genres'] and 'Western' in r['genres']]
+for r in westerns:
     parse_review(r, chunk_parser)
 
-
-#could also store r['tokens'] = tokens
-#or
-#r['text_wrapper'] = text_wrapper
-
-for r in reviews:
+all_collos = []
+for r in westerns:
     all_collos.extend(r['collocations'])
 
+Counter(all_collos).most_common(50)
 
-Counter(all_collos).most_common()
+# westerns related to John Wayne
+for r in westerns:
+    if ('John', 'Wayne') in r['collocations']:
+        print(r['title'])
 
-for r in reviews:
-     ...:     if ('bad', 'guys') in r['collocations']:
-     ...:         print(r['title'])
-
-for r in reviews:
-     ...:     if ('New', 'Wave') in r['collocations']:
-     ...:         print(r['title'])
-     ...:
-     ...:
-Les Biches (1969)
-The Firemen's Ball (1969)
-Around a Small Mountain (2010)
-Elevator to the Gallows (2005)
-La Collectionneuse (1967)
-Cléo from 5 to 7 (1962)
-A Sunday in the Country (1984)
-Breathless (1960)
-Bob le Flambeur (1955)
-The 400 Blows (1959)
-The Flower of Evil (2003)
-Au revoir les enfants (1987)
-Atlantic City (1980)
-Inspector Bellamy (2011)
-The Beaches of Agnes (2008)
-A Tale of Winter (1992)
-The Dreamers (2004)
-Mon oncle d'Amerique (1980)
-The American Friend (1977)
+# westerns with bad guys
+for r in westerns:
+    if ('bad', 'guys') in r['collocations']:
+        print(r['title'])
 
 
+"""
 # can generate tags by looking at common vocab not in stopwords list!
 from nltk.corpus import stopwords
 stopwords.words('english')
@@ -143,9 +88,9 @@ stopwords.words('english')
 for tok in mr_tokens:
      ...:     if tok.lower() not in stopwords.words('english') and tok.isalpha():
      ...:         print(tok)
+"""
 
-
-
+# let's join the Ebert corpus into a single block of text
 reviews.sort(key=lambda x:x['date_published'])
 review_texts = [r['text'] for r in reviews]
 all_text = '\n\n\n\n'.join(review_texts)
@@ -157,24 +102,11 @@ all_text.count('fall in love')
 all_text.count('falls in love')
 # all_text.count('fall out of love')
 
-all_tokens = nltk.word_tokenize(all_text)
+# we need to tokenize to go deeper
+all_tokens = nltk.word_tokenize(all_text) # this will take a moment
 
-
-# formula may differ--could log some of these values
-# also n+1 for some of these values?
-
-all_tokens_count = len(all_tokens)
-all_counts = Counter(all_tokens)
-all_freqs = {tok:all_counts[tok]/all_tokens_count for tok in all_tokens}
-
-mr_token_count = len(mr_tokens)
-mr_counts = Counter(mr_tokens)
-mr_freqs = {tok:mr_counts[tok]/mr_token_count for tok in mr_tokens}
-
-tf_idf_scores = [(tok, mr_freqs[tok]/all_freqs[tok]) for tok in set(mr_tokens)]
-tf_idf_scores.sort(key=lambda s:s[1], reverse=True)
-tf_idf_scores
-
+# let's find all _falling in love_ phrases with a stemmer
+stemmer = PorterStemmer()
 romances = []
 trigrams = nltk.ngrams(all_tokens, n=3)
 for tri in trigrams:
@@ -182,13 +114,67 @@ for tri in trigrams:
         print(tri)
         romances.append(tri)
 
-len(romances)
+len(romances) # 862
 
+# token frequencies: tf-idf
+# formula may differ--could log some of these values
+# also n+1 for some of these values?
+all_tokens_count = len(all_tokens)
+all_counts = Counter(all_tokens)
+all_freqs = {tok:all_counts[tok]/all_tokens_count for tok in all_tokens}
 
+mr = titles['Minority Report (2002)']
+mr_tokens = nltk.word_tokenize(mr['text'])
+mr_token_count = len(mr_tokens)
+mr_counts = Counter(mr_tokens)
+mr_counts.most_common(50)
+mr_freqs = {tok:mr_counts[tok]/mr_token_count for tok in mr_tokens}
 
+tf_idf_scores = [(tok, mr_freqs[tok]/all_freqs[tok]) for tok in set(mr_tokens)]
+tf_idf_scores.sort(key=lambda s:s[1], reverse=True)
+tf_idf_scores # most to least uniquely characteristic tokens of Minority Report
+# consider how to extend this to other reviews across the corpus
+
+# now let's use the nltk.Text wrapper to explore the whole corpus more
 all_wrapper = nltk.Text(all_tokens)
+all_fdist = nltk.FreqDist(all_wrapper) # unique tokens with their frequencies
+all_fdist.most_common(50)
+'aphrodisiac' in all_fdist # True
+all_fdist['aphrodisiac'] # 12
 
+# actors
+# Freeman, Poitier, Gooding, Glover, Snipes
+# consider comparison of female actors / actresses
+all_wrapper.dispersion_plot(
+    ['Eastwood','Brando','Niro','Schwarzenegger','Hanks','Depp',
+    'Pitt','Spacey','DiCaprio','Clooney','Osment','Gosling'])
 
+all_wrapper.concordance('laugh', lines=50)
+all_wrapper.concordance('cry', lines=50)
+all_wrapper.concordance('fight', lines=50)
+
+# takes a moment to do the first one
+all_wrapper.similar('scene') # noun
+all_wrapper.similar('actor') # noun
+all_wrapper.similar('woman') # noun
+all_wrapper.similar('pleasant') # adjective
+all_wrapper.similar('hideous') # adjective
+all_wrapper.similar('entertaining') # adjective
+all_wrapper.similar('foreign') # adjective
+all_wrapper.similar('intimately') # adverb
+all_wrapper.similar('slay') # verb
+all_wrapper.similar('pray') # verb
+
+all_wrapper.common_contexts(['good','bad'])
+all_wrapper.common_contexts(['good','evil'])
+all_wrapper.common_contexts(['man','woman'])
+all_wrapper.common_contexts(['boy','girl'])
+all_wrapper.common_contexts(['little','small'])
+all_wrapper.common_contexts(['big','huge'])
+all_wrapper.common_contexts(['short','long'])
+all_wrapper.common_contexts(['true','false'])
+all_wrapper.common_contexts(['very','extremely'])
+all_wrapper.common_contexts(['emotion','feeling'])
 
 # Visualizing our data
 import matplotlib.pyplot as pyplot
@@ -223,12 +209,7 @@ pyplot.show() # bimodal distribution--indicates varying formats
 
 # genre (pie chart)
 genre_instances = [inst for r in reviews if r['genres'] for inst in r['genres']]
-#genre_instances = []
-#for r in reviews:
-#    tagged_genres = r['genres']
-#    if tagged_genres:
-#        genre_instances.extend(tagged_genres)
-from collections import Counter
+#from collections import Counter
 genre_counts = Counter(genre_instances)
 genre_counts
 #genres, counts = zip(*sorted(genre_counts.items()))
@@ -260,6 +241,9 @@ pyplot.show() # displays funny--how to fix?
 # note the dip in 2.5 star ratings--a sign of irrationality?
 
 
+# NEXT: let's brainstorm some of operations over the whole corpus!
+
+
 # means and medians:
 # stars on mpaa_rating
 # stars on genre
@@ -271,50 +255,6 @@ pyplot.show() # displays funny--how to fix?
 # stars on review length
 # stars on running_time
 
-
-
-# need numpy, matplotlib
-# actors
-# Freem, Poitier, Gooding, Glover, Snipes
-all_wrapper.dispersion_plot(
-    ['Eastwood','Brando','Niro','Schwarzenegger','Hanks','Depp',
-    'Pitt','Spacey','DiCaprio','Clooney','Osment','Gosling'])
-
-# consider comparison of female actors / actresses
-
-all_wrapper.concordance('laugh', lines=50)
-all_wrapper.concordance('cry', lines=50)
-all_wrapper.concordance('fight', lines=50)
-
-
-
-all_wrapper.similar('scene') # noun
-all_wrapper.similar('actor') # noun
-all_wrapper.similar('woman') # noun
-all_wrapper.similar('pleasant') # adjective
-all_wrapper.similar('hideous') # adjective
-all_wrapper.similar('entertaining') # adjective
-all_wrapper.similar('foreign') # adjective
-all_wrapper.similar('intimately') # adverb
-all_wrapper.similar('slay') # verb
-all_wrapper.similar('pray') # verb
-
-all_wrapper.common_contexts(['good','bad'])
-all_wrapper.common_contexts(['good','evil'])
-all_wrapper.common_contexts(['man','woman'])
-all_wrapper.common_contexts(['boy','girl'])
-all_wrapper.common_contexts(['little','small'])
-all_wrapper.common_contexts(['big','huge'])
-all_wrapper.common_contexts(['short','long'])
-all_wrapper.common_contexts(['true','false'])
-all_wrapper.common_contexts(['very','extremely'])
-all_wrapper.common_contexts(['emotion','feeling'])
-
-# all_fdist = nltk.FreqDist(all_wrapper)
-# all_fdist.most_common(50)
-
 # OPTIONAL: DOCUMENT CLASSIFICATION
 # http://www.nltk.org/book/ch06.html#document-classification
 # train on mpaa ratng and star rating
-
-# spaCy
