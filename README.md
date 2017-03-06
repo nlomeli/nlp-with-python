@@ -1,8 +1,8 @@
 # nlp-with-python
 Natural Language Processing with Python
 
-Installation:
-	Must have:
+## Installation:
+### Must have:  
   	python 3
   		https://www.python.org/downloads/
   		https://docs.continuum.io/anaconda/install
@@ -15,7 +15,7 @@ Installation:
   		https://spacy.io/docs/usage/
   		  1. pip install -U spacy
   		  2. python -m spacy.en.download all
-	Optional:
+### Optional:
   	ipython (recommended)
   		https://ipython.org/install.html
   		pip install ipython
@@ -26,6 +26,6 @@ Installation:
   		pip install matplotlib
       (or via Anaconda)
 
-Data:
-  Roger Ebert corpus of reviews:
-    https://github.com/nlomeli/nlp-with-python/tree/master/review_json
+## Data:
+Roger Ebert corpus of reviews
+* https://github.com/nlomeli/nlp-with-python/tree/master/review_json
